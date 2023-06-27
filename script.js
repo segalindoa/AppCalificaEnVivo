@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function() {
               // Crear el símbolo del marcador para la ubicación del lugar seleccionado
               let pictureSymbolSelectedPlace = {
                 type: 'picture-marker',
-                url: '/imagenes/placeLocation2.gif',
+                url: '/imagenes/placelocation2.gif',
                 width: '40px',
                 height: '40px'
             };

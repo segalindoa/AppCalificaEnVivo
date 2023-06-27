@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Califica en VIVO!</title>
+  <style>
+
+    /* Colores de paleta */
+    :root {
+      --color-primary: #D0CCD0;
+      --color-background: #FBFCFF;
+      --color-text: #605856;
+      --color-accent: #1C6E8C;
+      --color-button-disabled: #274156;
+    }
+
+    /* Estilos globales */
+    body {
+      background-color: #FBFCFF;
+      font-family: Arial, sans-serif;
+    }
+    
+    /* Estilos del contenedor principal */
+    #lugaresCercanos {
+      width: 95%;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #D0CCD0;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilos del encabezado */
+    h1, h2 {
+      color: #605856;
+      margin-bottom: 2px;
+    }
+    
+    /* Estilos de los campos de entrada */
+    input[type="text"] {
+      width: calc(100% - 20px);
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    
+    /* Estilos del botón */
+    button {
+      background-color: #1C6E8C;
+      color: #FBFCFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+
+    button:disabled,
+    button[disabled] {
+      background-color: #999;
+      color: #D0CCD0;
+    }
+    
+    /* Estilos de la selección de lugares */
+    #placesSelect {
+      width: calc(100% - 20px);
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    
+    /* Estilos de las estrellas de calificación */
+    #ratingStars {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    #ratingStars > div {
+      width: 50%;
+    }
+
+    .star {
+      cursor: pointer;
+      font-size: 48px;
+      color: #999;
+      margin-right: 5px;
+      margin-bottom: 5px;
+      transition: color 0.3s;
+      position: relative;
+      display: inline-block;      
+    }
+    
+    .star.selected {
+      color: gold;
+    }
+    
+    .star::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% - 10px);
+      left: 50%;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #FFF;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 14px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    .star::before {
+      content: "";
+      position: absolute;
+      bottom: calc(100% - 15px);
+      left: 50%;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid rgba(0, 0, 0, 0.8);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    .star:hover::after,
+    .star:hover::before {
+      opacity: 1;
+    }
+    
+    /* Estilos del contenedor del mapa */
+    #mapContainer {
+      margin: 0 auto;
+      width: 95%;
+      height: 400px;
+      border-radius: 10px;
+      background-color: #D0CCD0;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+
+  <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.27/esri/themes/light/main.css"
+  />
+  <script src="https://js.arcgis.com/4.27/"></script>
+</head>
+<body>
+    <h1>Califica en VIVO!</h1>
+    <div id="lugaresCercanos">
+
+        <h2>Tu nombre</h2>
+        <input type="text" id="nameInput" placeholder="Ingresa tu nombre o apodo">
+
+        <h2>🌎 Tu ubicación actual</h2>
+        <input type="text" id="locationInput" disabled>
+
+        <h2>Lugares cercanos</h2>
+        <select id="placesSelect">
+          <option disabled selected>Selecciona un lugar a calificar</option>
+        </select>
+      
+        <h2>Califica el lugar</h2>
+        <div id="ratingStars">
+          <div>
+            <span class="star" data-tooltip="No entiendo cómo siguen funcionando">&#9733;</span>
+            <span class="star" data-tooltip="He visto peores, pero no lo recomiendo">&#9733;</span>
+            <span class="star" data-tooltip="Aceptable, pero hay oportunidades de mejora">&#9733;</span>
+            <span class="star" data-tooltip="Muy bien, volveré sin duda">&#9733;</span>
+            <span class="star" data-tooltip="Que alguien les de un premio, por favor!">&#9733;</span>
+          </div>
+          <div>
+            <button id="submitButton" disabled>Envía tu calificación en tiempo real 🕙❯</button>      
+          </div>
+        </div>
+    </div>
+  
+    <div id="mapContainer"></div>
+    <script src="script.js"></script>
+</body>
+</html>

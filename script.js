@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Crear el símbolo para la ubicación del dispositivo
             let pictureSymbolDeviceLocation = {
                 type: 'picture-marker',
-                url: 'deviceLocation2a.gif',
+                url: '/imagenes/deviceLocation2a.gif',
                 width: '64px',
                 height: '64px'
             };
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function() {
               // Crear el símbolo del marcador para la ubicación del lugar seleccionado
               let pictureSymbolSelectedPlace = {
                 type: 'picture-marker',
-                url: 'placeLocation2.gif',
+                url: '/imagenes/placeLocation2.gif',
                 width: '40px',
                 height: '40px'
             };

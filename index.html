@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Califica en VIVO!</title>
+  <title>Califica en Tiempo Real</title>
   <style>
 
     /* Colores de paleta */
@@ -76,7 +76,7 @@
       background-color: #1C6E8C;
       color: #FBFCFF;
       border: none;
-      padding: 10px 20px;
+      padding: 10px;
       border-radius: 5px;
       cursor: pointer;
       margin-bottom: 2px;
@@ -112,7 +112,7 @@
 
     .star {
       cursor: pointer;
-      font-size: 36px;
+      font-size: 24px;
       color: #999;
       margin-right: 5px;
       margin-bottom: 5px;
@@ -128,7 +128,7 @@
     .star::after {
       content: attr(data-tooltip);
       position: absolute;
-      bottom: calc(100% - 10px);
+      bottom: calc(100% - 5px);
       left: 50%;
       background-color: rgba(0, 0, 0, 0.7);
       color: #FFF;
@@ -144,7 +144,7 @@
     .star::before {
       content: "";
       position: absolute;
-      bottom: calc(100% - 15px);
+      bottom: calc(100% - 10px);
       left: 50%;
       border-left: 5px solid transparent;
       border-right: 5px solid transparent;
@@ -163,7 +163,7 @@
     #mapContainer {
       margin: 0 auto;
       width: 95%;
-      height: 450px;
+      height: 230px;
       border-radius: 10px;
       background-color: #D0CCD0;
       padding: 10px;
@@ -180,7 +180,7 @@
 </head>
 <body>
   <div id="lugaresCercanos">
-      <h1>Califica en VIVO</h1>
+      <h1>Califica en Tiempo Real</h1>
       <div id="subtitulo">con ArcGIS Velocity y Geoevent</div>
         <h2> 😀 Tu nombre</h2>
         <input type="text" id="nameInput" placeholder="Ingresa tu nombre o apodo">
@@ -193,7 +193,7 @@
           <option disabled selected>Selecciona un lugar a calificar</option>
         </select>
       
-        <h2>Califica el lugar</h2>
+        <h2>💯 Califica el lugar</h2>
         <div id="ratingStars">
           <div>
             <span class="star" data-tooltip="No entiendo cómo siguen funcionando">&#9733;</span>
@@ -203,7 +203,7 @@
             <span class="star" data-tooltip="Que alguien les de un premio, por favor!">&#9733;</span>
           </div>
           <div>
-            <button id="submitButton" disabled>Envía tu calificación en tiempo real 🕙❯</button>      
+            <button id="submitButton" disabled title="Envía tu calificación en tiempo real" style="float: right;">Envíar calificación 📢</button>      
           </div>
         </div>
     </div>

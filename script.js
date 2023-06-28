@@ -1,6 +1,8 @@
 var map; // Variable global para almacenar la referencia al mapa
 var selectedPlaceGraphic; // Variable glolbal para almacenar el gráfico del lugar seleccionado
-
+var categorySelectedPlace;
+var latitudeSelectedPlace;
+var longitudeSelectedPlace;
 
 // Espera a que el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", function() {
@@ -15,7 +17,8 @@ document.addEventListener("DOMContentLoaded", function() {
       var longitudeDevice = position.coords.longitude;
   
       // Rellenar el control de texto con las coordenadas
-      document.getElementById('locationInput').value = 'Estás aquí: [Lon: ' + redondear(longitudeDevice, 6) + ', Lat: ' + redondear(latitudeDevice, 6) + ']';
+      //document.getElementById('locationInput').value = 'Estás aquí: [Lon: ' + redondear(longitudeDevice, 6) + ', Lat: ' + redondear(latitudeDevice, 6) + ']';
+      document.getElementById('locationInput').value = 'Estás aquí: [' + convertToDms(longitudeDevice, true) + ', ' + convertToDms(latitudeDevice, false) + ']';
   
       // Configurar el encabezado de autorización
       var authorizationHeader = 'fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4='; // Reemplaza con tu token de acceso de Foursquare
@@ -25,8 +28,8 @@ document.addEventListener("DOMContentLoaded", function() {
   
       // Realizar la solicitud AJAX
       var places;
-      var selectedPlaceObj;
       var xhr = new XMLHttpRequest();
+      
       xhr.open('GET', apiUrl, true);
       xhr.setRequestHeader('Authorization', authorizationHeader); // Agregar el encabezado de autorización
       xhr.onreadystatechange = function() {
@@ -72,9 +75,9 @@ document.addEventListener("DOMContentLoaded", function() {
             // Crear el símbolo para la ubicación del dispositivo
             let pictureSymbolDeviceLocation = {
                 type: 'picture-marker',
-                url: '/imagenes/deviceLocation2a.gif',
-                width: '64px',
-                height: '64px'
+                url: '/imagenes/deviceLocation3.gif',
+                width: '32px',
+                height: '32px'
             };
 
             // Crear el gráfico de la ubicación del dispositivo y agregarlo al mapa
@@ -89,11 +92,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 type: "text",
                 haloColor: "#D0CCD0",
                 haloSize: "1px",
-                text: "Estás aquí: [" + redondear(longitudeDevice,6) + ", " + redondear(latitudeDevice,6) + "]",
+                //text: "Estás aquí:\n[" + redondear(longitudeDevice,3) + ", " + redondear(latitudeDevice,3) + "]",
+                text: "Estás aquí:\n[" + convertToDms(longitudeDevice,true) + ", " + convertToDms(latitudeDevice,false) + "]",
                 xoffset: 0,
                 yoffset: -30,
                 font: {
-                  size: 14
+                  size: 12
                 }
               };
 
@@ -113,10 +117,9 @@ document.addEventListener("DOMContentLoaded", function() {
             // Manejar el evento de cambio en la selección de lugares
             document.getElementById('placesSelect').addEventListener('change', function() {
               var selectedPlace = document.getElementById('placesSelect').value;
-              //var selectedOption = document.querySelector('#placesSelect option:checked');
-              selectedPlaceObj = places.find(o => o.name === selectedPlace)
-              var latitudeSelectedPlace = selectedPlaceObj['geocodes']['main']['latitude'];
-              var longitudeSelectedPlace = selectedPlaceObj['geocodes']['main']['longitude']
+              var selectedPlaceObj = places.find(o => o.name === selectedPlace)
+              latitudeSelectedPlace = selectedPlaceObj['geocodes']['main']['latitude'];
+              longitudeSelectedPlace = selectedPlaceObj['geocodes']['main']['longitude']
           
               // Eliminar el gráfico del lugar seleccionado anteriormente, si existe
               if (selectedPlaceGraphic) {
@@ -132,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function() {
               // Crear el símbolo del marcador para la ubicación del lugar seleccionado
               let pictureSymbolSelectedPlace = {
                 type: 'picture-marker',
-                url: '/imagenes/placelocation2.gif',
+                url: '/imagenes/placeLocation3.png',
                 width: '40px',
                 height: '40px'
             };
@@ -149,10 +152,16 @@ document.addEventListener("DOMContentLoaded", function() {
               view.zoom = 15;
           
               // Crear la ventana emergente con la información del lugar
+              categorySelectedPlace = "No definida";
+              if (selectedPlaceObj['categories'][0]['name']){
+                categorySelectedPlace = selectedPlaceObj['categories'][0]['name'];
+              }
+
+              var distanceSelectedPlace = selectedPlaceObj['distance'];
               var popupTemplate = {
                 title: selectedPlace,
-                content: '<p>Categoría del lugar: ' + selectedPlaceObj['categories'][0]['name'] + '</p>' +
-                  '<p> Distancia desde tu ubicación: ' + selectedPlaceObj['distance'] + 'm.</p>'
+                content: '<p style="font-size: 14px">❔ Categoría del lugar: ' + categorySelectedPlace + '<br>' +
+                  '🚶‍♂ Distancia desde tu ubicación: ' + distanceSelectedPlace + 'm.</p>'
               };
           
               // Configurar la ventana emergente para el gráfico del marcador
@@ -261,15 +270,53 @@ function updateSubmitButtonState() {
     return array;
   }
 
+  /**
+   * Converts decimal degrees to degrees minutes seconds.
+   * 
+   * @param dd the decimal degrees value.
+   * @param isLng specifies whether the decimal degrees value is a longitude.
+   * @return degrees minutes seconds string in the format 49°15'51.35"N
+   */
+  function convertToDms(dd, isLng) {
+    var dir = dd < 0
+      ? isLng ? 'W' : 'S'
+      : isLng ? 'E' : 'N';
+
+    var absDd = Math.abs(dd);
+    var deg = absDd | 0;
+    var frac = absDd - deg;
+    var min = (frac * 60) | 0;
+    var sec = frac * 3600 - min * 60;
+    // Round it to 2 decimal points.
+    sec = Math.round(sec * 100) / 100;
+    return deg + "°" + min + "'" + sec + '"' + dir;
+  }
+
   // Manejar el evento del botón de comando
   document.getElementById('submitButton').addEventListener('click', function() {
-    var nameInput = document.getElementById('nameInput').value;
-    var placeSelect = document.getElementById('placesSelect').value;
-    var rating = getSelectedRating();
+    var userName = document.getElementById('nameInput').value;
+    var nameSelectedPlace = document.getElementById('placesSelect').value;
+    var ratingSelectedPlace = getSelectedRating();
+    
+    let eventoCalificacion = [
+      {
+        "usuarioReporta": userName, 
+        "lugarCalificado": nameSelectedPlace, 
+        "lon": longitudeSelectedPlace, 
+        "lat": latitudeSelectedPlace, 
+        "categoriaLugarCalificado": categorySelectedPlace, 
+        "calificacionLugar": ratingSelectedPlace,
+        "timestampReporte": Date.now()
+      }
+    ];
 
+    // Url feed http receiver ArcGIS Velocity:
+    // https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b
+
+    console.log(JSON.stringify(eventoCalificacion, null, 2));
+    
     // Mostrar ventana de texto con la información
-    alert('Nombre del usuario: ' + nameInput + '\nLugar seleccionado: ' + placeSelect + '\nCalificación: ' + rating + ' estrellas');
+    alert(JSON.stringify(eventoCalificacion, null, 2));
   });
-  
 });
   

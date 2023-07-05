@@ -369,8 +369,14 @@ document.addEventListener("DOMContentLoaded", function () {
             requestArcGISVelocity.status != 403 && 
             requestArcGISVelocity.status != 500)) {
           console.log("Evento de calificación enviado exitosamente a ArcGIS Velocity | Estado de la petición: " + requestArcGISVelocity.status + " | Respuesta: " + requestArcGISVelocity.responseText)
+          
+          alert("Evento de calificación enviado exitosamente a ArcGIS Velocity | Estado de la petición: " + requestArcGISVelocity.status + " | Respuesta: " + requestArcGISVelocity.responseText)
         } else {
           console.log("El evento no de calificación no pudo ser enviado a ArcGIS Velocity.\nEstado de respuesta a la petición: " + requestArcGISVelocity.status + 
+          " | readyState: " + requestArcGISVelocity.readyState + 
+          "| responseText: " + requestArcGISVelocity.responseText)
+
+          alert("El evento no de calificación no pudo ser enviado a ArcGIS Velocity.\nEstado de respuesta a la petición: " + requestArcGISVelocity.status + 
           " | readyState: " + requestArcGISVelocity.readyState + 
           "| responseText: " + requestArcGISVelocity.responseText)
         }

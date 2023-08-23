@@ -352,6 +352,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Url feed http receiver ArcGIS Velocity:
       var urlFeedVelocity = "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b"
+      var urlInputGeoEvent = "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-califica-en-vivo"
+
       const datosEventoCalificacion = JSON.stringify(eventoCalificacion, null, 2);
       console.log(datosEventoCalificacion);
 
@@ -362,19 +364,28 @@ document.addEventListener("DOMContentLoaded", function () {
       requestArcGISVelocity.setRequestHeader("Accept", "*/*");
       requestArcGISVelocity.setRequestHeader("Host", "us-iot.arcgis.com");
       requestArcGISVelocity.setRequestHeader("Connection", "keep-alive");
-     
-      const textoEnviado = document.getElementById('textoEnviado');
 
+      // Enviar los datos al input de GeoEvent
+      var requestGeoEvent = new XMLHttpRequest();
+      requestGeoEvent.open('POST', urlInputGeoEvent, true)
+      requestGeoEvent.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+      requestGeoEvent.setRequestHeader("Accept", "*/*");
+      requestGeoEvent.setRequestHeader("Connection", "keep-alive");
+
+      const textoEnviadoToVelocity = document.getElementById('textoEnviadoVelocity');
+      const textoEnviadoGeoEvent = document.getElementById('textoEnviadoGeoEvent')
+
+      // callback ArcGIS Velocity
       requestArcGISVelocity.onreadystatechange = function() {
         if (requestArcGISVelocity.readyState == 4 && 
           (requestArcGISVelocity.status != 404 && 
             requestArcGISVelocity.status != 403 && 
             requestArcGISVelocity.status != 500)) {
               console.log("Evento de calificación enviado exitosamente a ArcGIS Velocity | Estado de la petición: " + requestArcGISVelocity.status + " | Respuesta: " + requestArcGISVelocity.responseText)
-              textoEnviado.style.visibility = "visible"
-              textoEnviado.innerHTML = "Calificación enviada exitosamente ✅"
+              textoEnviadoToVelocity.style.visibility = "visible"
+              textoEnviadoToVelocity.innerHTML = "Calificación enviada exitosamente a ArcGIS Velocity ✅"
               setTimeout(() => {
-                textoEnviado.style.visibility = 'hidden';
+                textoEnviadoToVelocity.style.visibility = 'hidden';
               }, 3000);
         } else {
 
@@ -382,14 +393,41 @@ document.addEventListener("DOMContentLoaded", function () {
           " | readyState: " + requestArcGISVelocity.readyState + 
           "| responseText: " + requestArcGISVelocity.responseText)
 
-          textoEnviado.style.visibility = "visible"
-          textoEnviado.innerHTML = "Error al enviar la calificación. Inténtelo nuevamente ⚠️"
+          textoEnviadoToVelocity.style.visibility = "visible"
+          textoEnviadoToVelocity.innerHTML = "Error al enviar la calificación a ArcGIS Velocity. Inténtelo nuevamente ⚠️"
           setTimeout(() => {
-            textoEnviado.style.visibility = 'hidden';
+            textoEnviadoToVelocity.style.visibility = 'hidden';
+          }, 4500);
+        }
+      };
+      
+      // callback GeoEvent
+      requestGeoEvent.onreadystatechange = function() {
+        if (requestGeoEvent.readyState == 4 && 
+          (requestGeoEvent.status != 404 && 
+            requestGeoEvent.status != 403 && 
+            requestGeoEvent.status != 500)) {
+              console.log("Evento de calificación enviado exitosamente a GeoEvent | Estado de la petición: " + requestGeoEvent.status + " | Respuesta: " + requestGeoEvent.responseText)
+              textoEnviadoGeoEvent.style.visibility = "visible"
+              textoEnviadoGeoEvent.innerHTML = "Calificación enviada exitosamente a GeoEvent✅"
+              setTimeout(() => {
+                textoEnviadoGeoEvent.style.visibility = 'hidden';
+              }, 3000);
+        } else {
+
+          console.log("El evento no de calificación no pudo ser enviado a GeoEvent.\nEstado de respuesta a la petición: " + requestGeoEvent.status + 
+          " | readyState: " + requestGeoEvent.readyState + 
+          "| responseText: " + requestGeoEvent.responseText)
+
+          textoEnviadoGeoEvent.style.visibility = "visible"
+          textoEnviadoGeoEvent.innerHTML = "Error al enviar la calificación a GeoEvent. Inténtelo nuevamente ⚠️"
+          setTimeout(() => {
+            textoEnviadoGeoEvent.style.visibility = 'hidden';
           }, 4500);
         }
       };
 
       requestArcGISVelocity.send(datosEventoCalificacion);
+      requestGeoEvent.send(datosEventoCalificacion);
   });
 });

@@ -30,12 +30,21 @@ document.addEventListener("DOMContentLoaded", function () {
       "fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Reemplaza con tu token de acceso de Foursquare
 
     // Invocar API de Foursquare para obtener lugares cercanos
-    var apiUrl =
+    /*var apiUrl =
       "https://api.foursquare.com/v3/places/nearby?ll=" +
       latitudeDevice +
       "," +
       longitudeDevice +
-      "&limit=50";
+      "&limit=50";*/
+
+
+    // Invocar API de Foursquare para obtener lugares cercanos
+    var apiUrl =
+      "https://api.foursquare.com/v3/places/search?ll=" +
+      latitudeDevice +
+      "," +
+      longitudeDevice +
+      "&radius=1500&limit=50";
 
     // Realizar la solicitud AJAX
     var places;
@@ -362,15 +371,15 @@ document.addEventListener("DOMContentLoaded", function () {
       requestArcGISVelocity.open('POST', urlFeedVelocity, true);
       requestArcGISVelocity.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
       requestArcGISVelocity.setRequestHeader("Accept", "*/*");
-      requestArcGISVelocity.setRequestHeader("Host", "us-iot.arcgis.com");
-      requestArcGISVelocity.setRequestHeader("Connection", "keep-alive");
+      //requestArcGISVelocity.setRequestHeader("Host", "us-iot.arcgis.com");
+      //requestArcGISVelocity.setRequestHeader("Connection", "keep-alive");
 
       // Enviar los datos al input de GeoEvent
       var requestGeoEvent = new XMLHttpRequest();
       requestGeoEvent.open('POST', urlInputGeoEvent, true)
       requestGeoEvent.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
       requestGeoEvent.setRequestHeader("Accept", "*/*");
-      requestGeoEvent.setRequestHeader("Connection", "keep-alive");
+      //requestGeoEvent.setRequestHeader("Connection", "keep-alive");
 
       const textoEnviadoToVelocity = document.getElementById('textoEnviadoVelocity');
       const textoEnviadoGeoEvent = document.getElementById('textoEnviadoGeoEvent')

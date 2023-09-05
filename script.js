@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
             container: "mapContainer",
             map: map,
             center: [longitudeDevice, latitudeDevice],
-            zoom: 15,
+            zoom: 13,
           });
 
           // Crear el punto con la ubicación del dispositivo
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
               // Centrar el mapa en la ubicación del lugar seleccionado
               view.goTo(pointSelectedPlace);
-              view.zoom = 15;
+              view.zoom = 13;
 
               // Crear la ventana emergente con la información del lugar
               categorySelectedPlace = "No definida";

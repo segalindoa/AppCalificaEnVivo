@@ -361,7 +361,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Url feed http receiver ArcGIS Velocity:
       var urlFeedVelocity = "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b"
-      var urlInputGeoEvent = "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-califica-en-vivo"
+      var urlInputGeoEvent = "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-calificaciones-en-vivo"
 
       const datosEventoCalificacion = JSON.stringify(eventoCalificacion, null, 2);
       console.log(datosEventoCalificacion);

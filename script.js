@@ -317,9 +317,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return array;
   }
 
+
   // Ordenar un arreglo alfabéticamente
   function ordenarAbc(array){
-    return array.sort();
+
+
+    return array.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /**

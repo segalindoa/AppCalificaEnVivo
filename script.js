@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Configurar el encabezado de autorización
     var authorizationHeader =
-      "fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Reemplaza con tu token de acceso de Foursquare
+      "fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Token de acceso a Foursquare
 
     // Invocar API de Foursquare para obtener lugares cercanos
     /*var apiUrl =
@@ -55,7 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4 && xhr.status === 200) {
         var response = JSON.parse(xhr.responseText);
-        places = desordenar(response.results);
+        //places = desordenar(response.results);
+        places = ordenarAbc(response.results);
 
         // Poblar la lista desplegable con los lugares cercanos
         var selectElement = document.getElementById("placesSelect");
@@ -298,18 +299,15 @@ document.addEventListener("DOMContentLoaded", function () {
     return Number(Math.round(value + "e" + decimals) + "e-" + decimals);
   }
 
-  // Función para ordenar aleatoriamente un arreglo
+  // Ordenar aleatoriamente un arreglo
   function desordenar(array) {
     let currentIndex = array.length,
       randomIndex;
 
-    // While there remain elements to shuffle.
     while (currentIndex != 0) {
-      // Pick a remaining element.
       randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
 
-      // And swap it with the current element.
       [array[currentIndex], array[randomIndex]] = [
         array[randomIndex],
         array[currentIndex],
@@ -317,6 +315,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     return array;
+  }
+
+  // Ordenar un arreglo alfabéticamente
+  function ordenarAbc(array){
+    return array.sort();
   }
 
   /**

@@ -1,8 +1,10 @@
 var map; // Variable global para almacenar la referencia al mapa
-var selectedPlaceGraphic; // Variable glolbal para almacenar el gráfico del lugar seleccionado
-var categorySelectedPlace;
-var latitudeSelectedPlace;
-var longitudeSelectedPlace;
+var graphicLugarSeleccionado; // Variable glolbal para almacenar el gráfico del lugar seleccionado
+var graphicTextoLugarSeleccionado;
+var categoriaLugarSeleccionado;
+var latitudLugarSeleccionado;
+var longitudLugarSeleccionado;
+var lugaresCercanos;
 
 // Espera a que el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", function () {
@@ -47,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "&radius=1500&limit=50";
 
     // Realizar la solicitud AJAX
-    var places;
+    //var lugares;
     var xhr = new XMLHttpRequest();
 
     xhr.open("GET", apiUrl, true);
@@ -56,14 +58,15 @@ document.addEventListener("DOMContentLoaded", function () {
       if (xhr.readyState === 4 && xhr.status === 200) {
         var response = JSON.parse(xhr.responseText);
         //places = desordenar(response.results);
-        places = ordenarAbc(response.results);
+        lugaresCercanos = ordenarAbc(response.results);
 
         // Poblar la lista desplegable con los lugares cercanos
         var selectElement = document.getElementById("placesSelect");
-        places.forEach(function (place) {
+        lugaresCercanos.forEach(function (place) {
           var option = document.createElement("option");
-          option.value = place.name;
-          option.innerHTML = place.name;
+          //option.value = place.name;
+          option.value = place.fsq_id;
+          option.innerHTML = place.name + " [" + place.location.address + "]";
           selectElement.appendChild(option);
         });
 
@@ -95,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
 
           // Crear el punto con la ubicación del dispositivo
-          var pointDeviceLocation = new Point({
+          var pointUbicacionDispositivo = new Point({
             longitude: longitudeDevice,
             latitude: latitudeDevice,
           });
@@ -103,24 +106,23 @@ document.addEventListener("DOMContentLoaded", function () {
           // Crear el símbolo para la ubicación del dispositivo
           let pictureSymbolDeviceLocation = {
             type: "picture-marker",
-            url: "/imagenes/deviceLocation3.gif",
-            width: "32px",
-            height: "32px",
+            url: "/imagenes/deviceLocation4.png",
+            width: "24px",
+            height: "42px",
           };
 
           // Crear el gráfico de la ubicación del dispositivo y agregarlo al mapa
           deviceLocationGraphic = new Graphic({
-            geometry: pointDeviceLocation,
+            geometry: pointUbicacionDispositivo,
             symbol: pictureSymbolDeviceLocation,
           });
           view.graphics.add(deviceLocationGraphic);
 
-          // Agregar la etiqueta "Estás aquí" en la ubicación actual del dospositivo
+          // Agregar la etiqueta "Estás aquí" en la ubicación actual del dispositivo
           const textEstasAqui = {
             type: "text",
             haloColor: "#D0CCD0",
             haloSize: "1px",
-            //text: "Estás aquí:\n[" + redondear(longitudeDevice,3) + ", " + redondear(latitudeDevice,3) + "]",
             text:
               "Estás aquí:\n[" +
               convertToDms(longitudeDevice, true) +
@@ -130,49 +132,55 @@ document.addEventListener("DOMContentLoaded", function () {
             xoffset: 0,
             yoffset: -30,
             font: {
-              size: 12,
+              size: 11,
             },
           };
 
           const pointEstasAqui = {
             type: "point",
-            longitude: pointDeviceLocation.longitude,
-            latitude: pointDeviceLocation.latitude,
+            longitude: pointUbicacionDispositivo.longitude,
+            latitude: pointUbicacionDispositivo.latitude,
           };
 
-          const graphicEstasAqui = new Graphic({
+          const graphicTextoEstasAqui = new Graphic({
             geometry: pointEstasAqui,
             symbol: textEstasAqui,
           });
 
-          view.graphics.add(graphicEstasAqui);
+          view.graphics.add(graphicTextoEstasAqui);
 
+          graphicTextoLugarSeleccionado = null
           // Manejar el evento de cambio en la selección de lugares
           document
             .getElementById("placesSelect")
             .addEventListener("change", function () {
-              var selectedPlace = document.getElementById("placesSelect").value;
-              var selectedPlaceObj = places.find(
-                (o) => o.name === selectedPlace
+              var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
+              var lugarSeleccionadoObj = lugaresCercanos.find(
+                (o) => o.fsq_id === fsqIdLugarSeleccionado
               );
-              latitudeSelectedPlace =
-                selectedPlaceObj["geocodes"]["main"]["latitude"];
-              longitudeSelectedPlace =
-                selectedPlaceObj["geocodes"]["main"]["longitude"];
+              latitudLugarSeleccionado =
+                lugarSeleccionadoObj["geocodes"]["main"]["latitude"];
+              longitudLugarSeleccionado =
+                lugarSeleccionadoObj["geocodes"]["main"]["longitude"];
 
               // Eliminar el gráfico del lugar seleccionado anteriormente, si existe
-              if (selectedPlaceGraphic) {
-                view.graphics.remove(selectedPlaceGraphic);
+              if (graphicLugarSeleccionado) {
+                view.graphics.remove(graphicLugarSeleccionado);
+              }
+              
+              // Eliminar el gráfico del texto del lugar seleccionado anteriormente, si existe
+              if (graphicTextoLugarSeleccionado) {
+                view.graphics.remove(graphicTextoLugarSeleccionado);
               }
 
               // Crear el punto de ubicación del lugar seleccionado
-              var pointSelectedPlace = new Point({
-                longitude: longitudeSelectedPlace,
-                latitude: latitudeSelectedPlace,
+              var pointLugarSeleccionado = new Point({
+                longitude: longitudLugarSeleccionado,
+                latitude: latitudLugarSeleccionado,
               });
 
               // Crear el símbolo del marcador para la ubicación del lugar seleccionado
-              let pictureSymbolSelectedPlace = {
+              let pictureSymbolLugarSeleccionado = {
                 type: "picture-marker",
                 url: "/imagenes/placeLocation3.png",
                 width: "40px",
@@ -180,45 +188,65 @@ document.addEventListener("DOMContentLoaded", function () {
               };
 
               // Crear el gráfico del marcador y agregarlo al mapa
-              selectedPlaceGraphic = new Graphic({
-                geometry: pointSelectedPlace,
-                symbol: pictureSymbolSelectedPlace,
+              graphicLugarSeleccionado = new Graphic({
+                geometry: pointLugarSeleccionado,
+                symbol: pictureSymbolLugarSeleccionado,
               });
-              view.graphics.add(selectedPlaceGraphic);
+              view.graphics.add(graphicLugarSeleccionado);
 
               // Centrar el mapa en la ubicación del lugar seleccionado
-              view.goTo(pointSelectedPlace);
+              view.goTo(pointLugarSeleccionado);
               view.zoom = 13;
 
               // Crear la ventana emergente con la información del lugar
-              categorySelectedPlace = "No definida";
-              if (selectedPlaceObj["categories"][0]["name"]) {
-                categorySelectedPlace =
-                  selectedPlaceObj["categories"][0]["name"];
+              categoriaLugarSeleccionado = "No definida";
+              if (lugarSeleccionadoObj["categories"].length > 0) {
+                categoriaLugarSeleccionado = lugarSeleccionadoObj["categories"][0]["name"];
               }
 
-              var distanceSelectedPlace = selectedPlaceObj["distance"];
-              var popupTemplate = {
-                title: selectedPlace,
-                content:
-                  '<p style="font-size: 14px">❔ Categoría del lugar: ' +
-                  categorySelectedPlace +
-                  "<br>" +
-                  "🚶‍♂ Distancia desde tu ubicación: " +
-                  distanceSelectedPlace +
-                  "m.</p>",
+              var distanciaLugarSeleccionado = lugarSeleccionadoObj["distance"];
+              // var popupTemplate = {
+              //   title: lugarSeleccionadoObj.name,
+              //   content:
+              //     '<p style="font-size: 14px">❔ Categoría del lugar: ' +
+              //     categoriaLugarSeleccionado +
+              //     "<br>" +
+              //     "🚶‍♂ Distancia desde tu ubicación: " +
+              //     distanciaLugarSeleccionado +
+              //     "m.</p>",
+              // };
+
+              // Agregar la etiqueta del lugar seleccionado
+              const textoLugarSeleccionado = {
+                type: "text",
+                haloColor: "#D0CCD0",
+                haloSize: "1px",
+                text:
+                  lugarSeleccionadoObj.name + " [Distancia: " + distanciaLugarSeleccionado + "m.]",
+                xoffset: 0,
+                yoffset: -30,
+                font: {
+                  size: 10,
+                },
               };
 
+              graphicTextoLugarSeleccionado = new Graphic({
+                geometry: pointLugarSeleccionado,
+                symbol: textoLugarSeleccionado,
+              });
+    
+              view.graphics.add(graphicTextoLugarSeleccionado);
+
               // Configurar la ventana emergente para el gráfico del marcador
-              selectedPlaceGraphic.popupTemplate = popupTemplate;
+              //selectedPlaceGraphic.popupTemplate = popupTemplate;
 
               // Mostrar la ventana emergente al hacer clic en el marcador
-              view.popup.popupEnabled = true;
+              //view.popup.popupEnabled = true;
 
-              view.openPopup({
-                features: [selectedPlaceGraphic],
-                location: pointSelectedPlace,
-              });
+              //view.openPopup({
+              //  features: [selectedPlaceGraphic],
+              //  location: pointSelectedPlace,
+              //});
             });
         });
       }
@@ -271,12 +299,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Función para actualizar el estado del botón de comando
   function updateSubmitButtonState() {
-    var nameInput = document.getElementById("nameInput").value;
-    var placeSelect = document.getElementById("placesSelect").value;
-    var rating = getSelectedRating();
+    var emailUsuario = document.getElementById("nameInput").value;
+    var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
+    
+    //var lugarSeleccionado = document.getElementById("placesSelect").value;
+    var lugarSeleccionado = lugaresCercanos.find(
+      (o) => o.fsq_id === fsqIdLugarSeleccionado
+    );
+
+    var calificacion = getSelectedRating();
     var submitButton = document.getElementById("submitButton");
 
-    if (nameInput !== "" && placeSelect !== "" && rating > 0) {
+    if (emailUsuario !== "" && lugarSeleccionado !== "" && calificacion > 0) {
       submitButton.disabled = false;
     } else {
       submitButton.disabled = true;
@@ -320,9 +354,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Ordenar un arreglo alfabéticamente
   function ordenarAbc(array){
-
-
     return array.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // Eliminar elementos repetidos de un arreglo
+  function eliminarRepetidos(array){
+    return array.filter((item,
+      index) => array.indexOf(item) === index);
   }
 
   /**
@@ -345,22 +383,25 @@ document.addEventListener("DOMContentLoaded", function () {
     return deg + "°" + min + "'" + sec + '"' + dir;
   }
 
-  // Manejar el evento del botón de comando
+  // Manejar el evento del botón de enviar datos a ArcGIS
   document
     .getElementById("submitButton")
     .addEventListener("click", function () {
-      var userName = document.getElementById("nameInput").value;
-      var nameSelectedPlace = document.getElementById("placesSelect").value;
-      var ratingSelectedPlace = getSelectedRating();
+      var usuario = document.getElementById("nameInput").value;
+      var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
+      var lugarSeleccionadoObj = lugaresCercanos.find(
+        (o) => o.fsq_id === fsqIdLugarSeleccionado
+      );
+      var calificacionLugarSeleccionado = getSelectedRating();
 
       let eventoCalificacion = [
         {
-          usuarioReporta: userName,
-          lugarCalificado: nameSelectedPlace,
-          lon: longitudeSelectedPlace,
-          lat: latitudeSelectedPlace,
-          categoriaLugarCalificado: categorySelectedPlace,
-          calificacionLugar: ratingSelectedPlace,
+          usuarioReporta: usuario,
+          lugarCalificado: lugarSeleccionadoObj.name,
+          lon: longitudLugarSeleccionado,
+          lat: latitudLugarSeleccionado,
+          categoriaLugarCalificado: categoriaLugarSeleccionado,
+          calificacionLugar: calificacionLugarSeleccionado,
           timestampReporte: Date.now(),
         },
       ];

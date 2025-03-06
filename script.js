@@ -409,6 +409,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Url feed http receiver ArcGIS Velocity:
       var urlFeedVelocity = "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b"
       var urlInputGeoEvent = "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-calificaciones-en-vivo"
+      var urlFeedGeocercaVelocity = "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/beaf0d25707040e8985f8317d9cbd418"
 
       const datosEventoCalificacion = JSON.stringify(eventoCalificacion, null, 2);
       console.log(datosEventoCalificacion);
@@ -420,6 +421,12 @@ document.addEventListener("DOMContentLoaded", function () {
       requestArcGISVelocity.setRequestHeader("Accept", "*/*");
       //requestArcGISVelocity.setRequestHeader("Host", "us-iot.arcgis.com");
       //requestArcGISVelocity.setRequestHeader("Connection", "keep-alive");
+
+      // Enviar datos al feed HTTP receiver de Geocerca en ArcGIS Velocity
+      var requestGeocercaVelocity = new XMLHttpRequest();
+      requestGeocercaVelocity.open('POST', urlFeedGeocercaVelocity, true);
+      requestGeocercaVelocity.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+      requestGeocercaVelocity.setRequestHeader("Accept", "*/*");
 
       // Enviar los datos al input de GeoEvent
       var requestGeoEvent = new XMLHttpRequest();

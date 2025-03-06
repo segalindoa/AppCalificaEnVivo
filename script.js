@@ -491,6 +491,7 @@ document.addEventListener("DOMContentLoaded", function () {
       };
 
       requestArcGISVelocity.send(datosEventoCalificacion);
+      requestGeocercaVelocity.send(datosEventoCalificacion);
       requestGeoEvent.send(datosEventoCalificacion);
   });
 });

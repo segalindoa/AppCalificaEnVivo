@@ -29,8 +29,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Configurar el encabezado de autorización
     var token4square =
-      //"fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Token de acceso a Foursquare
-      "XNSF0T40YW41D2TDHVU5ABCHEEUP2AII4OTBJHOMNYKMGZLU";
+      "fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Token de acceso a Foursquare
+      //"XNSF0T40YW41D2TDHVU5ABCHEEUP2AII4OTBJHOMNYKMGZLU";
 
     var apiUrl =
       "https://places-api.foursquare.com/places/search?ll=" +

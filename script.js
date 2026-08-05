@@ -28,227 +28,228 @@ document.addEventListener("DOMContentLoaded", function () {
       "]";
 
     // Configurar el encabezado de autorización
-    var authorizationHeader =
-      "fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Token de acceso a Foursquare
+    var token4square =
+      //"fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Token de acceso a Foursquare
+      "XNSF0T40YW41D2TDHVU5ABCHEEUP2AII4OTBJHOMNYKMGZLU";
 
-    // Invocar API de Foursquare para obtener lugares cercanos
-    /*var apiUrl =
-      "https://api.foursquare.com/v3/places/nearby?ll=" +
-      latitudeDevice +
-      "," +
-      longitudeDevice +
-      "&limit=50";*/
-
-
-    // Invocar API de Foursquare para obtener lugares cercanos
     var apiUrl =
-      "https://api.foursquare.com/v3/places/search?ll=" +
+      "https://places-api.foursquare.com/places/search?ll=" +
       latitudeDevice +
       "," +
       longitudeDevice +
-      "&radius=1500&limit=50";
+      "&radius=1500&limit=50";      
 
     // Realizar la solicitud AJAX
     //var lugares;
     var xhr = new XMLHttpRequest();
-
     xhr.open("GET", apiUrl, true);
-    xhr.setRequestHeader("Authorization", authorizationHeader); // Agregar el encabezado de autorización
+
+    xhr.setRequestHeader("Authorization", "Bearer " + token4square);
+    xhr.setRequestHeader("X-Places-Api-Version", "2025-06-17");
+    xhr.setRequestHeader("Accept", "application/json");
+
     xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        var response = JSON.parse(xhr.responseText);
-        //places = desordenar(response.results);
-        lugaresCercanos = ordenarAbc(response.results);
+      if (xhr.readyState === 4 ) {
+        if (xhr.status === 200) {
+          var response = JSON.parse(xhr.responseText);
+          //places = desordenar(response.results);
+          lugaresCercanos = ordenarAbc(response.results);
 
-        // Poblar la lista desplegable con los lugares cercanos
-        var selectElement = document.getElementById("placesSelect");
-        lugaresCercanos.forEach(function (place) {
-          var option = document.createElement("option");
-          //option.value = place.name;
-          option.value = place.fsq_id;
-          option.innerHTML = place.name + " [" + place.location.address + "]";
-          selectElement.appendChild(option);
-        });
+          // Poblar la lista desplegable con los lugares cercanos
+          var selectElement = document.getElementById("placesSelect");
+          lugaresCercanos.forEach(function (place) {
+            var option = document.createElement("option");
+            option.value = place.fsq_place_id;
 
-        require([
-          "esri/Map",
-          "esri/views/MapView",
-          "esri/geometry/Point",
-          "esri/symbols/SimpleMarkerSymbol",
-          "esri/symbols/PictureMarkerSymbol",
-          "esri/Graphic",
-        ], function (
-          Map,
-          MapView,
-          Point,
-          SimpleMarkerSymbol,
-          PictureMarkerSymbol,
-          Graphic
-        ) {
-          // Crear el mapa
-          map = new Map({
-            //basemap: 'streets-night-vector'
-            basemap: "gray-vector",
-          });
-          var view = new MapView({
-            container: "mapContainer",
-            map: map,
-            center: [longitudeDevice, latitudeDevice],
-            zoom: 13,
+            // Construir dirección si existe
+            var direccion = place.formatted_address || "";
+            option.innerHTML = place.name + (direccion ? " [" + direccion + "]" : "");
+
+            selectElement.appendChild(option);
           });
 
-          // Crear el punto con la ubicación del dispositivo
-          var pointUbicacionDispositivo = new Point({
-            longitude: longitudeDevice,
-            latitude: latitudeDevice,
-          });
-
-          // Crear el símbolo para la ubicación del dispositivo
-          let pictureSymbolDeviceLocation = {
-            type: "picture-marker",
-            url: "/imagenes/deviceLocation4.png",
-            width: "24px",
-            height: "42px",
-          };
-
-          // Crear el gráfico de la ubicación del dispositivo y agregarlo al mapa
-          deviceLocationGraphic = new Graphic({
-            geometry: pointUbicacionDispositivo,
-            symbol: pictureSymbolDeviceLocation,
-          });
-          view.graphics.add(deviceLocationGraphic);
-
-          // Agregar la etiqueta "Estás aquí" en la ubicación actual del dispositivo
-          const textEstasAqui = {
-            type: "text",
-            haloColor: "#D0CCD0",
-            haloSize: "1px",
-            text:
-              "Estás aquí:\n[" +
-              convertToDms(longitudeDevice, true) +
-              ", " +
-              convertToDms(latitudeDevice, false) +
-              "]",
-            xoffset: 0,
-            yoffset: -30,
-            font: {
-              size: 11,
-            },
-          };
-
-          const pointEstasAqui = {
-            type: "point",
-            longitude: pointUbicacionDispositivo.longitude,
-            latitude: pointUbicacionDispositivo.latitude,
-          };
-
-          const graphicTextoEstasAqui = new Graphic({
-            geometry: pointEstasAqui,
-            symbol: textEstasAqui,
-          });
-
-          view.graphics.add(graphicTextoEstasAqui);
-
-          graphicTextoLugarSeleccionado = null
-          // Manejar el evento de cambio en la selección de lugares
-          document
-            .getElementById("placesSelect")
-            .addEventListener("change", function () {
-              var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
-              var lugarSeleccionadoObj = lugaresCercanos.find(
-                (o) => o.fsq_id === fsqIdLugarSeleccionado
-              );
-              latitudLugarSeleccionado =
-                lugarSeleccionadoObj["geocodes"]["main"]["latitude"];
-              longitudLugarSeleccionado =
-                lugarSeleccionadoObj["geocodes"]["main"]["longitude"];
-
-              // Eliminar el gráfico del lugar seleccionado anteriormente, si existe
-              if (graphicLugarSeleccionado) {
-                view.graphics.remove(graphicLugarSeleccionado);
-              }
-              
-              // Eliminar el gráfico del texto del lugar seleccionado anteriormente, si existe
-              if (graphicTextoLugarSeleccionado) {
-                view.graphics.remove(graphicTextoLugarSeleccionado);
-              }
-
-              // Crear el punto de ubicación del lugar seleccionado
-              var pointLugarSeleccionado = new Point({
-                longitude: longitudLugarSeleccionado,
-                latitude: latitudLugarSeleccionado,
-              });
-
-              // Crear el símbolo del marcador para la ubicación del lugar seleccionado
-              let pictureSymbolLugarSeleccionado = {
-                type: "picture-marker",
-                url: "/imagenes/placeLocation3.png",
-                width: "40px",
-                height: "40px",
-              };
-
-              // Crear el gráfico del marcador y agregarlo al mapa
-              graphicLugarSeleccionado = new Graphic({
-                geometry: pointLugarSeleccionado,
-                symbol: pictureSymbolLugarSeleccionado,
-              });
-              view.graphics.add(graphicLugarSeleccionado);
-
-              // Centrar el mapa en la ubicación del lugar seleccionado
-              view.goTo(pointLugarSeleccionado);
-              view.zoom = 13;
-
-              // Crear la ventana emergente con la información del lugar
-              categoriaLugarSeleccionado = "No definida";
-              if (lugarSeleccionadoObj["categories"].length > 0) {
-                categoriaLugarSeleccionado = lugarSeleccionadoObj["categories"][0]["name"];
-              }
-
-              var distanciaLugarSeleccionado = lugarSeleccionadoObj["distance"];
-              // var popupTemplate = {
-              //   title: lugarSeleccionadoObj.name,
-              //   content:
-              //     '<p style="font-size: 14px">❔ Categoría del lugar: ' +
-              //     categoriaLugarSeleccionado +
-              //     "<br>" +
-              //     "🚶‍♂ Distancia desde tu ubicación: " +
-              //     distanciaLugarSeleccionado +
-              //     "m.</p>",
-              // };
-
-              // Agregar la etiqueta del lugar seleccionado
-              const textoLugarSeleccionado = {
-                type: "text",
-                haloColor: "#D0CCD0",
-                haloSize: "1px",
-                text:
-                  lugarSeleccionadoObj.name + " [Distancia: " + distanciaLugarSeleccionado + "m.]",
-                xoffset: 0,
-                yoffset: -30,
-                font: {
-                  size: 10,
-                },
-              };
-
-              graphicTextoLugarSeleccionado = new Graphic({
-                geometry: pointLugarSeleccionado,
-                symbol: textoLugarSeleccionado,
-              });
-    
-              view.graphics.add(graphicTextoLugarSeleccionado);
-
-              // Configurar la ventana emergente para el gráfico del marcador
-              //selectedPlaceGraphic.popupTemplate = popupTemplate;
-
-              // Mostrar la ventana emergente al hacer clic en el marcador
-              //view.popup.popupEnabled = true;
-
-              //view.openPopup({
-              //  features: [selectedPlaceGraphic],
-              //  location: pointSelectedPlace,
-              //});
+          require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/geometry/Point",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/PictureMarkerSymbol",
+            "esri/Graphic",
+          ], function (
+            Map,
+            MapView,
+            Point,
+            SimpleMarkerSymbol,
+            PictureMarkerSymbol,
+            Graphic
+          ) {
+            // Crear el mapa
+            map = new Map({
+              //basemap: 'streets-night-vector'
+              basemap: "gray-vector",
             });
-        });
+            var view = new MapView({
+              container: "mapContainer",
+              map: map,
+              center: [longitudeDevice, latitudeDevice],
+              zoom: 13,
+            });
+
+            // Crear el punto con la ubicación del dispositivo
+            var pointUbicacionDispositivo = new Point({
+              longitude: longitudeDevice,
+              latitude: latitudeDevice,
+            });
+
+            // Crear el símbolo para la ubicación del dispositivo
+            let pictureSymbolDeviceLocation = {
+              type: "picture-marker",
+              url: "/imagenes/deviceLocation4.png",
+              width: "24px",
+              height: "42px",
+            };
+
+            // Crear el gráfico de la ubicación del dispositivo y agregarlo al mapa
+            deviceLocationGraphic = new Graphic({
+              geometry: pointUbicacionDispositivo,
+              symbol: pictureSymbolDeviceLocation,
+            });
+            view.graphics.add(deviceLocationGraphic);
+
+            // Agregar la etiqueta "Estás aquí" en la ubicación actual del dispositivo
+            const textEstasAqui = {
+              type: "text",
+              haloColor: "#D0CCD0",
+              haloSize: "1px",
+              text:
+                "Estás aquí:\n[" +
+                convertToDms(longitudeDevice, true) +
+                ", " +
+                convertToDms(latitudeDevice, false) +
+                "]",
+              xoffset: 0,
+              yoffset: -30,
+              font: {
+                size: 11,
+              },
+            };
+
+            const pointEstasAqui = {
+              type: "point",
+              longitude: pointUbicacionDispositivo.longitude,
+              latitude: pointUbicacionDispositivo.latitude,
+            };
+
+            const graphicTextoEstasAqui = new Graphic({
+              geometry: pointEstasAqui,
+              symbol: textEstasAqui,
+            });
+
+            view.graphics.add(graphicTextoEstasAqui);
+
+            graphicTextoLugarSeleccionado = null
+            // Manejar el evento de cambio en la selección de lugares
+            document
+              .getElementById("placesSelect")
+              .addEventListener("change", function () {
+                var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
+                var lugarSeleccionadoObj = lugaresCercanos.find(
+                  (o) => o.fsq_id === fsqIdLugarSeleccionado
+                );
+                latitudLugarSeleccionado =
+                  lugarSeleccionadoObj["geocodes"]["main"]["latitude"];
+                longitudLugarSeleccionado =
+                  lugarSeleccionadoObj["geocodes"]["main"]["longitude"];
+
+                // Eliminar el gráfico del lugar seleccionado anteriormente, si existe
+                if (graphicLugarSeleccionado) {
+                  view.graphics.remove(graphicLugarSeleccionado);
+                }
+                
+                // Eliminar el gráfico del texto del lugar seleccionado anteriormente, si existe
+                if (graphicTextoLugarSeleccionado) {
+                  view.graphics.remove(graphicTextoLugarSeleccionado);
+                }
+
+                // Crear el punto de ubicación del lugar seleccionado
+                var pointLugarSeleccionado = new Point({
+                  longitude: longitudLugarSeleccionado,
+                  latitude: latitudLugarSeleccionado,
+                });
+
+                // Crear el símbolo del marcador para la ubicación del lugar seleccionado
+                let pictureSymbolLugarSeleccionado = {
+                  type: "picture-marker",
+                  url: "/imagenes/placeLocation3.png",
+                  width: "40px",
+                  height: "40px",
+                };
+
+                // Crear el gráfico del marcador y agregarlo al mapa
+                graphicLugarSeleccionado = new Graphic({
+                  geometry: pointLugarSeleccionado,
+                  symbol: pictureSymbolLugarSeleccionado,
+                });
+                view.graphics.add(graphicLugarSeleccionado);
+
+                // Centrar el mapa en la ubicación del lugar seleccionado
+                view.goTo(pointLugarSeleccionado);
+                view.zoom = 13;
+
+                // Crear la ventana emergente con la información del lugar
+                categoriaLugarSeleccionado = "No definida";
+                if (lugarSeleccionadoObj["categories"].length > 0) {
+                  categoriaLugarSeleccionado = lugarSeleccionadoObj["categories"][0]["name"];
+                }
+
+                var distanciaLugarSeleccionado = lugarSeleccionadoObj["distance"];
+                // var popupTemplate = {
+                //   title: lugarSeleccionadoObj.name,
+                //   content:
+                //     '<p style="font-size: 14px">❔ Categoría del lugar: ' +
+                //     categoriaLugarSeleccionado +
+                //     "<br>" +
+                //     "🚶‍♂ Distancia desde tu ubicación: " +
+                //     distanciaLugarSeleccionado +
+                //     "m.</p>",
+                // };
+
+                // Agregar la etiqueta del lugar seleccionado
+                const textoLugarSeleccionado = {
+                  type: "text",
+                  haloColor: "#D0CCD0",
+                  haloSize: "1px",
+                  text:
+                    lugarSeleccionadoObj.name + " [Distancia: " + distanciaLugarSeleccionado + "m.]",
+                  xoffset: 0,
+                  yoffset: -30,
+                  font: {
+                    size: 10,
+                  },
+                };
+
+                graphicTextoLugarSeleccionado = new Graphic({
+                  geometry: pointLugarSeleccionado,
+                  symbol: textoLugarSeleccionado,
+                });
+      
+                view.graphics.add(graphicTextoLugarSeleccionado);
+
+                // Configurar la ventana emergente para el gráfico del marcador
+                //selectedPlaceGraphic.popupTemplate = popupTemplate;
+
+                // Mostrar la ventana emergente al hacer clic en el marcador
+                //view.popup.popupEnabled = true;
+
+                //view.openPopup({
+                //  features: [selectedPlaceGraphic],
+                //  location: pointSelectedPlace,
+                //});
+              });
+          });
+        } else {
+        console.error("Error:", xhr.status, xhr.responseText);
+        }
       }
     };
     xhr.send();

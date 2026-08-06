@@ -27,26 +27,23 @@ document.addEventListener("DOMContentLoaded", function () {
       convertToDms(latitudeDevice, false) +
       "]";
 
-    // Configurar el encabezado de autorización
-    var token4square =
-      "fsq3ptbOnWLpFI+MY9AZsRi23Pii8GW7tA4ht/1Y8zd01E4="; // Token de acceso a Foursquare
-      //"XNSF0T40YW41D2TDHVU5ABCHEEUP2AII4OTBJHOMNYKMGZLU";
-
-    var apiUrl =
-      "https://places-api.foursquare.com/places/search?ll=" +
+  var apiUrl =
+      //"http://localhost:7071/api/BuscarLugaresCercanos?lat=" + // USAR ESTE para pruebas locales
+      "/api/BuscarLugaresCercanos?lat=" + // USAR ESTE para pruebas en Azure Static Web Apps
       latitudeDevice +
-      "," +
-      longitudeDevice +
-      "&radius=1500&limit=50";      
+      "&lon=" +
+      longitudeDevice;      
+
+  console.log("URL de la API para buscar lugares cercanos: " + apiUrl);
 
     // Realizar la solicitud AJAX
     //var lugares;
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", apiUrl, true);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", apiUrl, true);
 
-    xhr.setRequestHeader("Authorization", "Bearer " + token4square);
-    xhr.setRequestHeader("X-Places-Api-Version", "2025-06-17");
-    xhr.setRequestHeader("Accept", "application/json");
+    //xhr.setRequestHeader("Authorization", "Bearer " + token4square);
+    //xhr.setRequestHeader("X-Places-Api-Version", "2025-06-17");
+    //xhr.setRequestHeader("Accept", "application/json");
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4 ) {

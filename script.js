@@ -1,10 +1,36 @@
-var map; // Variable global para almacenar la referencia al mapa
-var graphicLugarSeleccionado; // Variable glolbal para almacenar el gráfico del lugar seleccionado
-var graphicTextoLugarSeleccionado;
-var categoriaLugarSeleccionado;
-var latitudLugarSeleccionado;
-var longitudLugarSeleccionado;
-var lugaresCercanos;
+// var map; // Variable global para almacenar la referencia al mapa
+// var graphicLugarSeleccionado; // Variable glolbal para almacenar el gráfico del lugar seleccionado
+// var graphicTextoLugarSeleccionado;
+// var categoriaLugarSeleccionado;
+// var latitudLugarSeleccionado;
+// var longitudLugarSeleccionado;
+// var lugaresCercanos;
+
+const CONFIG = {
+    apiBuscarLugaresCercanos: "/api/BuscarLugaresCercanos",                         // USAR ESTE para publicar en Azure Static Web Apps
+    //apiBuscarLugaresCercanos: "http://localhost:7071/api/BuscarLugaresCercanos", // USAR ESTE para pruebas locales
+    imagenUbicacionActual: "/imagenes/deviceLocation4.png",
+    imagenLugarSeleccionado: "/imagenes/placeLocation3.png",
+
+    urlFeedVelocityArcGISOnline:
+        "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b",
+    
+    urlFeedVelocityArcGISEnterprise:
+        "https://velocity-sspp.esri.co:7145/receiver/0d8fa0d27fa04ae2a35da7ce24fa6192e",
+
+    urlInputGeoEvent:
+        "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-calificaciones-en-vivo"
+};
+
+const appState = {
+    map: null,
+    graphicLugarSeleccionado: null,
+    graphicTextoLugarSeleccionado: null,
+    categoriaLugarSeleccionado: null,
+    latitudLugarSeleccionado: null,
+    longitudLugarSeleccionado: null,
+    lugaresCercanos: [],
+};
 
 // Espera a que el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", function () {
@@ -27,19 +53,17 @@ document.addEventListener("DOMContentLoaded", function () {
       convertToDms(latitudeDevice, false) +
       "]";
 
-  var apiUrl =
-      //"http://localhost:7071/api/BuscarLugaresCercanos?lat=" + // USAR ESTE para pruebas locales
-      "/api/BuscarLugaresCercanos?lat=" + // USAR ESTE para pruebas en Azure Static Web Apps
+  const urlBuscarLugaresCercanos =
+      CONFIG.apiBuscarLugaresCercanos + 
+      "?lat=" +
       latitudeDevice +
       "&lon=" +
       longitudeDevice;      
 
-  console.log("URL de la API para buscar lugares cercanos: " + apiUrl);
+  console.log("URL de la API para buscar lugares cercanos: " + urlBuscarLugaresCercanos);
 
-    // Realizar la solicitud AJAX
-    //var lugares;
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", apiUrl, true);
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", urlBuscarLugaresCercanos, true);
 
     //xhr.setRequestHeader("Authorization", "Bearer " + token4square);
     //xhr.setRequestHeader("X-Places-Api-Version", "2025-06-17");
@@ -48,18 +72,18 @@ document.addEventListener("DOMContentLoaded", function () {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4 ) {
         if (xhr.status === 200) {
-          var response = JSON.parse(xhr.responseText);
+          const response = JSON.parse(xhr.responseText);
           //places = desordenar(response.results);
-          lugaresCercanos = ordenarAbc(response.results);
+          appState.lugaresCercanos = ordenarAbc(response.results);
 
           // Poblar la lista desplegable con los lugares cercanos
-          var selectElement = document.getElementById("placesSelect");
-          lugaresCercanos.forEach(function (place) {
-            var option = document.createElement("option");
+          const selectElement = document.getElementById("placesSelect");
+          appState.lugaresCercanos.forEach(function (place) {
+            const option = document.createElement("option");
             option.value = place.fsq_place_id;
 
             // Construir dirección si existe
-            var direccion = place.formatted_address || "";
+            const direccion = place.formatted_address || "";
             option.innerHTML = place.name + (direccion ? " [" + direccion + "]" : "");
 
             selectElement.appendChild(option);
@@ -81,13 +105,13 @@ document.addEventListener("DOMContentLoaded", function () {
             Graphic
           ) {
             // Crear el mapa
-            map = new Map({
+            appState.map = new Map({
               //basemap: 'streets-night-vector'
               basemap: "gray-vector",
             });
             var view = new MapView({
               container: "mapContainer",
-              map: map,
+              map: appState.map,
               center: [longitudeDevice, latitudeDevice],
               zoom: 13,
             });
@@ -101,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Crear el símbolo para la ubicación del dispositivo
             let pictureSymbolDeviceLocation = {
               type: "picture-marker",
-              url: "/imagenes/deviceLocation4.png",
+              url: CONFIG.imagenUbicacionActual,
               width: "24px",
               height: "42px",
             };
@@ -144,59 +168,59 @@ document.addEventListener("DOMContentLoaded", function () {
 
             view.graphics.add(graphicTextoEstasAqui);
 
-            graphicTextoLugarSeleccionado = null
+            appState.graphicTextoLugarSeleccionado = null
             // Manejar el evento de cambio en la selección de lugares
             document
               .getElementById("placesSelect")
               .addEventListener("change", function () {
                 var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
-                var lugarSeleccionadoObj = lugaresCercanos.find(
-                  (o) => o.fsq_id === fsqIdLugarSeleccionado
+                var lugarSeleccionadoObj = appState.lugaresCercanos.find(
+                  (o) => o.fsq_place_id === fsqIdLugarSeleccionado
                 );
-                latitudLugarSeleccionado =
-                  lugarSeleccionadoObj["geocodes"]["main"]["latitude"];
-                longitudLugarSeleccionado =
-                  lugarSeleccionadoObj["geocodes"]["main"]["longitude"];
+
+                console.log("Lugar seleccionado:", lugarSeleccionadoObj);
+                appState.latitudLugarSeleccionado = lugarSeleccionadoObj.latitude;
+                appState.longitudLugarSeleccionado = lugarSeleccionadoObj.longitude;
 
                 // Eliminar el gráfico del lugar seleccionado anteriormente, si existe
-                if (graphicLugarSeleccionado) {
-                  view.graphics.remove(graphicLugarSeleccionado);
+                if (appState.graphicLugarSeleccionado) {
+                  view.graphics.remove(appState.graphicLugarSeleccionado);
                 }
                 
                 // Eliminar el gráfico del texto del lugar seleccionado anteriormente, si existe
-                if (graphicTextoLugarSeleccionado) {
-                  view.graphics.remove(graphicTextoLugarSeleccionado);
+                if (appState.graphicTextoLugarSeleccionado) {
+                  view.graphics.remove(appState.graphicTextoLugarSeleccionado);
                 }
 
                 // Crear el punto de ubicación del lugar seleccionado
                 var pointLugarSeleccionado = new Point({
-                  longitude: longitudLugarSeleccionado,
-                  latitude: latitudLugarSeleccionado,
+                  longitude: appState.longitudLugarSeleccionado,
+                  latitude: appState.latitudLugarSeleccionado,
                 });
 
                 // Crear el símbolo del marcador para la ubicación del lugar seleccionado
                 let pictureSymbolLugarSeleccionado = {
                   type: "picture-marker",
-                  url: "/imagenes/placeLocation3.png",
+                  url: CONFIG.imagenLugarSeleccionado,
                   width: "40px",
                   height: "40px",
                 };
 
                 // Crear el gráfico del marcador y agregarlo al mapa
-                graphicLugarSeleccionado = new Graphic({
+                appState.graphicLugarSeleccionado = new Graphic({
                   geometry: pointLugarSeleccionado,
                   symbol: pictureSymbolLugarSeleccionado,
                 });
-                view.graphics.add(graphicLugarSeleccionado);
+                view.graphics.add(appState.graphicLugarSeleccionado);
 
                 // Centrar el mapa en la ubicación del lugar seleccionado
                 view.goTo(pointLugarSeleccionado);
                 view.zoom = 13;
 
                 // Crear la ventana emergente con la información del lugar
-                categoriaLugarSeleccionado = "No definida";
+                appState.categoriaLugarSeleccionado = "No definida";
                 if (lugarSeleccionadoObj["categories"].length > 0) {
-                  categoriaLugarSeleccionado = lugarSeleccionadoObj["categories"][0]["name"];
+                  appState.categoriaLugarSeleccionado = lugarSeleccionadoObj["categories"][0]["name"];
                 }
 
                 var distanciaLugarSeleccionado = lugarSeleccionadoObj["distance"];
@@ -204,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 //   title: lugarSeleccionadoObj.name,
                 //   content:
                 //     '<p style="font-size: 14px">❔ Categoría del lugar: ' +
-                //     categoriaLugarSeleccionado +
+                //     appState.categoriaLugarSeleccionado +
                 //     "<br>" +
                 //     "🚶‍♂ Distancia desde tu ubicación: " +
                 //     distanciaLugarSeleccionado +
@@ -225,12 +249,12 @@ document.addEventListener("DOMContentLoaded", function () {
                   },
                 };
 
-                graphicTextoLugarSeleccionado = new Graphic({
+                appState.graphicTextoLugarSeleccionado = new Graphic({
                   geometry: pointLugarSeleccionado,
                   symbol: textoLugarSeleccionado,
                 });
       
-                view.graphics.add(graphicTextoLugarSeleccionado);
+                view.graphics.add(appState.graphicTextoLugarSeleccionado);
 
                 // Configurar la ventana emergente para el gráfico del marcador
                 //selectedPlaceGraphic.popupTemplate = popupTemplate;
@@ -301,8 +325,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
     
     //var lugarSeleccionado = document.getElementById("placesSelect").value;
-    var lugarSeleccionado = lugaresCercanos.find(
-      (o) => o.fsq_id === fsqIdLugarSeleccionado
+    var lugarSeleccionado = appState.lugaresCercanos.find(
+      (o) => o.fsq_place_id === fsqIdLugarSeleccionado
     );
 
     var calificacion = getSelectedRating();
@@ -381,14 +405,15 @@ document.addEventListener("DOMContentLoaded", function () {
     return deg + "°" + min + "'" + sec + '"' + dir;
   }
 
+
   // Manejar el evento del botón de enviar datos a ArcGIS
   document
     .getElementById("submitButton")
     .addEventListener("click", function () {
       var usuario = document.getElementById("nameInput").value;
       var fsqIdLugarSeleccionado = document.getElementById("placesSelect").value;
-      var lugarSeleccionadoObj = lugaresCercanos.find(
-        (o) => o.fsq_id === fsqIdLugarSeleccionado
+      var lugarSeleccionadoObj = appState.lugaresCercanos.find(
+        (o) => o.fsq_place_id === fsqIdLugarSeleccionado
       );
       var calificacionLugarSeleccionado = getSelectedRating();
 
@@ -396,38 +421,30 @@ document.addEventListener("DOMContentLoaded", function () {
         {
           usuarioReporta: usuario,
           lugarCalificado: lugarSeleccionadoObj.name,
-          lon: longitudLugarSeleccionado,
-          lat: latitudLugarSeleccionado,
-          categoriaLugarCalificado: categoriaLugarSeleccionado,
+          lon: appState.longitudLugarSeleccionado,
+          lat: appState.latitudLugarSeleccionado,
+          categoriaLugarCalificado: appState.categoriaLugarSeleccionado,
           calificacionLugar: calificacionLugarSeleccionado,
           timestampReporte: Date.now(),
         },
       ];
 
-      // Url feed http receiver ArcGIS Velocity:
-      var urlFeedVelocity = "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b"
-      var urlInputGeoEvent = "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-calificaciones-en-vivo"
-
       const datosEventoCalificacion = JSON.stringify(eventoCalificacion, null, 2);
       console.log(datosEventoCalificacion);
 
-      // Enviar datos al feed HTTP receiver de ArcGIS Velocity
+      // Enviar datos al feed HTTP receiver de ArcGIS Velocity de ArcGIS Enterprise
       var requestArcGISVelocity = new XMLHttpRequest();
-      requestArcGISVelocity.open('POST', urlFeedVelocity, true);
+      requestArcGISVelocity.open(
+        'POST', 
+        CONFIG.urlFeedVelocityArcGISEnterprise, 
+        true
+      );
       requestArcGISVelocity.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
       requestArcGISVelocity.setRequestHeader("Accept", "*/*");
       //requestArcGISVelocity.setRequestHeader("Host", "us-iot.arcgis.com");
       //requestArcGISVelocity.setRequestHeader("Connection", "keep-alive");
 
-      // Enviar los datos al input de GeoEvent
-      var requestGeoEvent = new XMLHttpRequest();
-      requestGeoEvent.open('POST', urlInputGeoEvent, true)
-      requestGeoEvent.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-      requestGeoEvent.setRequestHeader("Accept", "*/*");
-      //requestGeoEvent.setRequestHeader("Connection", "keep-alive");
-
-      const textoEnviadoToVelocity = document.getElementById('textoEnviadoVelocity');
-      const textoEnviadoGeoEvent = document.getElementById('textoEnviadoGeoEvent')
+      const textoEnviadoToArcGISVelocity = document.getElementById('textoEnviadoVelocity');
 
       // callback ArcGIS Velocity
       requestArcGISVelocity.onreadystatechange = function() {
@@ -436,10 +453,10 @@ document.addEventListener("DOMContentLoaded", function () {
             requestArcGISVelocity.status != 403 && 
             requestArcGISVelocity.status != 500)) {
               console.log("Evento de calificación enviado exitosamente a ArcGIS Velocity | Estado de la petición: " + requestArcGISVelocity.status + " | Respuesta: " + requestArcGISVelocity.responseText)
-              textoEnviadoToVelocity.style.visibility = "visible"
-              textoEnviadoToVelocity.innerHTML = "Calificación enviada exitosamente a ArcGIS Velocity ✅"
+              textoEnviadoToArcGISVelocity.style.visibility = "visible"
+              textoEnviadoToArcGISVelocity.innerHTML = "Calificación enviada exitosamente a ArcGIS Velocity ✅"
               setTimeout(() => {
-                textoEnviadoToVelocity.style.visibility = 'hidden';
+                textoEnviadoToArcGISVelocity.style.visibility = 'hidden';
               }, 3000);
         } else {
 
@@ -447,41 +464,15 @@ document.addEventListener("DOMContentLoaded", function () {
           " | readyState: " + requestArcGISVelocity.readyState + 
           "| responseText: " + requestArcGISVelocity.responseText)
 
-          textoEnviadoToVelocity.style.visibility = "visible"
-          textoEnviadoToVelocity.innerHTML = "Error al enviar la calificación a ArcGIS Velocity. Inténtelo nuevamente ⚠️"
+          textoEnviadoToArcGISVelocity.style.visibility = "visible"
+          textoEnviadoToArcGISVelocity.innerHTML = "Error al enviar la calificación a ArcGIS Velocity en ArcGIS Online. Inténtelo nuevamente ⚠️"
           setTimeout(() => {
-            textoEnviadoToVelocity.style.visibility = 'hidden';
+            textoEnviadoToArcGISVelocity.style.visibility = 'hidden';
           }, 4500);
         }
       };
       
-      // callback GeoEvent
-      requestGeoEvent.onreadystatechange = function() {
-        if (requestGeoEvent.readyState == 4 && 
-          (requestGeoEvent.status != 404 && 
-            requestGeoEvent.status != 403 && 
-            requestGeoEvent.status != 500)) {
-              console.log("Evento de calificación enviado exitosamente a GeoEvent | Estado de la petición: " + requestGeoEvent.status + " | Respuesta: " + requestGeoEvent.responseText)
-              textoEnviadoGeoEvent.style.visibility = "visible"
-              textoEnviadoGeoEvent.innerHTML = "Calificación enviada exitosamente a GeoEvent✅"
-              setTimeout(() => {
-                textoEnviadoGeoEvent.style.visibility = 'hidden';
-              }, 3000);
-        } else {
-
-          console.log("El evento no de calificación no pudo ser enviado a GeoEvent.\nEstado de respuesta a la petición: " + requestGeoEvent.status + 
-          " | readyState: " + requestGeoEvent.readyState + 
-          "| responseText: " + requestGeoEvent.responseText)
-
-          textoEnviadoGeoEvent.style.visibility = "visible"
-          textoEnviadoGeoEvent.innerHTML = "Error al enviar la calificación a GeoEvent. Inténtelo nuevamente ⚠️"
-          setTimeout(() => {
-            textoEnviadoGeoEvent.style.visibility = 'hidden';
-          }, 4500);
-        }
-      };
-
       requestArcGISVelocity.send(datosEventoCalificacion);
-      requestGeoEvent.send(datosEventoCalificacion);
+
   });
 });

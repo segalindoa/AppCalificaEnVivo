@@ -7,19 +7,13 @@
 // var lugaresCercanos;
 
 const CONFIG = {
-    apiBuscarLugaresCercanos: "/api/BuscarLugaresCercanos",                         // USAR ESTE para publicar en Azure Static Web Apps
-    //apiBuscarLugaresCercanos: "http://localhost:7071/api/BuscarLugaresCercanos", // USAR ESTE para pruebas locales
+    apiBuscarLugaresCercanos: "/api/BuscarLugaresCercanos",
+    urlFeedVelocityArcGISEnterprise: "/api/EnviarCalificacionVelocity",
+    urlFeedVelocityArcGISOnline: "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b",
+
     imagenUbicacionActual: "/imagenes/deviceLocation4.png",
-    imagenLugarSeleccionado: "/imagenes/placeLocation3.png",
+    imagenLugarSeleccionado: "/imagenes/placeLocation3.png"
 
-    urlFeedVelocityArcGISOnline:
-        "https://us-iot.arcgis.com/usadvanced00/idz676tz2hybp5tg/receiver/5ee4de90a29a462a862bba2e26e85f5b",
-    
-    urlFeedVelocityArcGISEnterprise:
-        "https://velocity-sspp.esri.co:7145/receiver/0d8fa0d27fa04ae2a35da7ce24fa6192e",
-
-    urlInputGeoEvent:
-        "https://ge.esri.co:6143/geoevent/rest/receiver/rest-json-in-calificaciones-en-vivo"
 };
 
 const appState = {
@@ -417,8 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       var calificacionLugarSeleccionado = getSelectedRating();
 
-      let eventoCalificacion = [
-        {
+      let eventoCalificacion = {
           usuarioReporta: usuario,
           lugarCalificado: lugarSeleccionadoObj.name,
           lon: appState.longitudLugarSeleccionado,
@@ -426,8 +419,7 @@ document.addEventListener("DOMContentLoaded", function () {
           categoriaLugarCalificado: appState.categoriaLugarSeleccionado,
           calificacionLugar: calificacionLugarSeleccionado,
           timestampReporte: Date.now(),
-        },
-      ];
+        };
 
       const datosEventoCalificacion = JSON.stringify(eventoCalificacion, null, 2);
       console.log(datosEventoCalificacion);
@@ -439,13 +431,66 @@ document.addEventListener("DOMContentLoaded", function () {
         CONFIG.urlFeedVelocityArcGISEnterprise, 
         true
       );
-      requestArcGISVelocity.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+      requestArcGISVelocity.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       requestArcGISVelocity.setRequestHeader("Accept", "*/*");
-      //requestArcGISVelocity.setRequestHeader("Host", "us-iot.arcgis.com");
-      //requestArcGISVelocity.setRequestHeader("Connection", "keep-alive");
 
       const textoEnviadoToArcGISVelocity = document.getElementById('textoEnviadoVelocity');
 
+      ///////////////
+      // Respuesta HTTP recibida correctamente
+      requestArcGISVelocity.onload = function () {
+        if (
+          requestArcGISVelocity.status >= 200 &&
+          requestArcGISVelocity.status < 300
+        ) {
+          console.log(
+            "Evento aceptado por ArcGIS Velocity" +
+            " | Estado: " + requestArcGISVelocity.status +
+            " | Respuesta: " + requestArcGISVelocity.responseText
+          );
+
+          textoEnviadoToArcGISVelocity.style.visibility = "visible";
+          textoEnviadoToArcGISVelocity.textContent =
+            "Calificación enviada exitosamente a ArcGIS Velocity ✅";
+
+          setTimeout(() => {
+            textoEnviadoToArcGISVelocity.style.visibility = "hidden";
+          }, 3000);
+        } else {
+          console.error(
+            "ArcGIS Velocity rechazó el evento" +
+            " | Estado: " + requestArcGISVelocity.status +
+            " | Respuesta: " + requestArcGISVelocity.responseText
+          );
+
+          textoEnviadoToArcGISVelocity.style.visibility = "visible";
+          textoEnviadoToArcGISVelocity.textContent =
+            "ArcGIS Velocity rechazó la calificación ⚠️";
+
+          setTimeout(() => {
+            textoEnviadoToArcGISVelocity.style.visibility = "hidden";
+          }, 4500);
+        }
+      };
+
+      // Error de red, TLS o CORS
+      requestArcGISVelocity.onerror = function () {
+        console.error(
+          "No fue posible confirmar la respuesta de ArcGIS Velocity." +
+          " Posible bloqueo por CORS, TLS o conectividad."
+        );
+
+        textoEnviadoToArcGISVelocity.style.visibility = "visible";
+        textoEnviadoToArcGISVelocity.textContent =
+          "No fue posible confirmar el envío a ArcGIS Velocity ⚠️";
+
+        setTimeout(() => {
+          textoEnviadoToArcGISVelocity.style.visibility = "hidden";
+        }, 4500);
+      };
+      ///////////////
+
+      /*
       // callback ArcGIS Velocity
       requestArcGISVelocity.onreadystatechange = function() {
         if (requestArcGISVelocity.readyState == 4 && 
@@ -470,7 +515,7 @@ document.addEventListener("DOMContentLoaded", function () {
             textoEnviadoToArcGISVelocity.style.visibility = 'hidden';
           }, 4500);
         }
-      };
+      };*/
       
       requestArcGISVelocity.send(datosEventoCalificacion);
 
